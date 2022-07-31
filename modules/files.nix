@@ -21,6 +21,25 @@ let
       then file.source
       else builtins.path { path = file.source; name = sourceName; };
 
+  # Note that (barring cycles) files are sorted so that child paths come before
+  # their parent paths. XXX
+  sortedFiles =
+    let
+      hasStrictPrefix = a: b:
+        (hasPrefix b.normalizedTarget a.normalizedTarget)
+        &&
+        (b.normalizedTarget != a.normalizedTarget);
+
+      isEarlierSibling = a: b:
+        ((dirOf a.normalizedTarget) == (dirOf b.normalizedTarget))
+        &&
+        ((baseNameOf a.normalizedTarget) < (baseNameOf b.normalizedTarget));
+
+      fileBefore = a: b: (hasStrictPrefix a b) || (isEarlierSibling a b);
+    in
+      toposort fileBefore (builtins.attrValues cfg);
+
+  resultFiles = sortedFiles.result;
 in
 
 {
@@ -45,7 +64,7 @@ in
           attrNames
             (filterAttrs (n: v: v > 1)
             (foldAttrs (acc: v: acc + v) 0
-            (mapAttrsToList (n: v: { ${v.target} = 1; }) cfg)));
+            (map (v: { ${v.target} = 1; }) resultFiles)));
         dupsStr = concatStringsSep ", " dups;
       in {
         assertion = dups == [];
@@ -59,6 +78,13 @@ in
                 conflict2 = { source = ./bar.nix; target = "baz"; };
               }'';
       })
+
+      {
+        assertion = !(sortedFiles ? cycle);
+        message = ''
+          Unable to topologically sort managed files.
+        '';
+      }
     ];
 
     lib.file.mkOutOfStoreSymlink = path:
@@ -76,8 +102,8 @@ in
         # Caveat emptor!
         forcedPaths =
           concatMapStringsSep " " (p: ''"$HOME"/${escapeShellArg p}'')
-            (mapAttrsToList (n: v: v.target)
-            (filterAttrs (n: v: v.force) cfg));
+            (map (v: v.target)
+            (filter (v: v.force) resultFiles));
 
         check = pkgs.writeText "check" ''
           ${config.lib.bash.initHomeManagerLib}
@@ -300,7 +326,7 @@ in
           _cmp ${sourceArg} ${homeDirArg}/${targetArg} \
             && changedFiles[${targetArg}]=0 \
             || changedFiles[${targetArg}]=1
-        '') (filter (v: v.onChange != "") (attrValues cfg))
+        '') (filter (v: v.onChange != "") resultFiles)
       + ''
         unset -f _cmp
       ''
@@ -316,7 +342,7 @@ in
             ${v.onChange}
           fi
         fi
-      '') (filter (v: v.onChange != "") (attrValues cfg))
+      '') (filter (v: v.onChange != "") resultFiles)
     );
 
     # Symlink directories and files that have the right execute bit.
@@ -338,22 +364,28 @@ in
           local executable="$3"
           local recursive="$4"
 
-          # If the target already exists then we have a collision. Note, this
-          # should not happen due to the assertion found in the 'files' module.
-          # We therefore simply log the conflict and otherwise ignore it, mainly
-          # to make the `files-target-config` test work as expected.
-          if [[ -e "$realOut/$relTarget" ]]; then
+          local noncanonTarget="$realOut/$relTarget"
+
+          # If there is already a non-directory file at the target path then we
+          # have a collision. Note, this should not happen due to the assertion
+          # found in the 'files' module.  We therefore simply log the conflict
+          # and otherwise ignore it, mainly to make the `files-target-config`
+          # test work as expected.  We ignore existing directories, as these
+          # were created as the parent (or grandparent, or great-grandparent,
+          # or ...) of a non-directory file under our management.
+          if [[ -e "$noncanonTarget" ]] && ! [[ -d "$noncanonTarget" ]]; then
             echo "File conflict for file '$relTarget'" >&2
             return
           fi
 
           # Figure out the real absolute path to the target.
           local target
-          target="$(realpath -m "$realOut/$relTarget")"
+          target="$(realpath -m "$noncanonTarget")"
 
           # Target path must be within $HOME.
           if [[ ! $target == $realOut* ]] ; then
             echo "Error installing file '$relTarget' outside \$HOME" >&2
+            echo "Target should resolve to a path beginning with '$realOut' but instead resolves to '$target'" 1>&2
             exit 1
           fi
 
@@ -362,8 +394,11 @@ in
             if [[ $recursive ]]; then
               mkdir -p "$target"
               lndir -silent "$source" "$target"
+            elif [[ -e $target ]]; then
+              echo "Target '$relTarget' already exists; recursively linking children of '$source' into '$relTarget'" 1>&2
+              lndir -silent "$source" "$target"
             else
-              ln -s "$source" "$target"
+              ln -s -T "$source" "$target"
             fi
           else
             [[ -x $source ]] && isExecutable=1 || isExecutable=""
@@ -373,9 +408,9 @@ in
             # expect for the target. Otherwise, we copy the file and
             # set the executable bit to the expected value.
             if [[ $executable == inherit || $isExecutable == $executable ]]; then
-              ln -s "$source" "$target"
+              ln -s -T "$source" "$target"
             else
-              cp "$source" "$target"
+              cp -T "$source" "$target"
 
               if [[ $executable == inherit ]]; then
                 # Don't change file mode if it should match the source.
@@ -388,8 +423,7 @@ in
             fi
           fi
         }
-      '' + concatStrings (
-        mapAttrsToList (n: v: ''
+      '' + concatMapStringsSep "\n" (v: ''
           insertFile ${
             escapeShellArgs [
               (sourceStorePath v)
@@ -399,7 +433,7 @@ in
                else toString v.executable)
               (toString v.recursive)
             ]}
-        '') cfg
-      ));
+        '') resultFiles
+      );
   };
 }

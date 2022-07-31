@@ -2,6 +2,28 @@
 
 let
   inherit (lib) hasPrefix hm literalExpression mkDefault mkIf mkOption removePrefix types;
+
+  cleanPath = path:
+    let
+      dummy = builtins.placeholder path;
+      prefix = "${dummy}/";
+      expanded = toString (/. + "${prefix}${path}");
+    in
+      if hasPrefix "/" path then toString (/. + path)
+      else if expanded == dummy then "."
+      else if hasPrefix prefix expanded then removePrefix prefix expanded
+      else throw "illegal path traversal in `${path}`";
+
+  expandPath = basePath: path:
+    if hasPrefix "/" path then cleanPath path
+    else cleanPath "${basePath}/${path}";
+
+  normalizePath = path: "${cleanPath path}/";
+
+  normalizedHomeDirectory = normalizePath homeDirectory;
+
+  relativePathFromHomeDirectory = basePath: path:
+    removePrefix "/" (removePrefix normalizedHomeDirectory (expandPath basePath path));
 in
 {
   # Constructs a type suitable for a `home.file` like option. The
@@ -13,15 +35,11 @@ in
   #   - basePathDesc   docbook compatible description of the base path
   #   - basePath       the file base path
   fileType = basePathDesc: basePath: types.attrsOf (types.submodule (
-    { name, config, ... }: {
+    { name, config, options, ... }: {
       options = {
         target = mkOption {
           type = types.str;
-          apply = p:
-            let
-              absPath = if hasPrefix "/" p then p else "${basePath}/${p}";
-            in
-              removePrefix (homeDirectory + "/") absPath;
+          apply = relativePathFromHomeDirectory basePath;
           defaultText = literalExpression "<name>";
           description = ''
             Path to target file relative to ${basePathDesc}.
@@ -98,6 +116,23 @@ in
             by the managed file source. Warning, this will silently
             delete the target regardless of whether it is a file or
             link.
+          '';
+        };
+
+        normalizedTarget = mkOption {
+          type = options.target.type;
+          apply = normalizePath;
+          default = config.target;
+          internal = true;
+          visible = false;
+          description = ''
+            ${options.target.description}, but normalized.
+            That is, the path is cleaned up as follows:
+              1. Superfluous "." elements removed,
+              2. ".." elements resolved (if possible), and
+              3. Duplicate "/" elements removed.
+            Additionally, the path is suffixed with a single "/".  Used in
+            sorting paths when constructing the `home-files` derivation.
           '';
         };
       };
