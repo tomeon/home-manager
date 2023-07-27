@@ -274,4 +274,20 @@ rec {
     in
     # directives;
     lib.types.anything;
+
+  /*
+    Type representing a secret specification for use with
+    `utils.genJqSecretsReplacementSnippet`.
+  */
+  secret = types.attrs // {
+    name = "secret";
+    description = "attribute set containing `{ _secret = <fully-qualified-path>; }`";
+    check =
+      v:
+      (types.attrs.check v) && ((builtins.attrNames v) == [ "_secret" ]) && (types.path.check v._secret);
+  };
+
+  # Type representing an optionally-secret field.
+  secretOr = other: types.oneOf ([ secret ] ++ (lib.toList other));
+
 }
