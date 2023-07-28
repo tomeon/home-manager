@@ -211,6 +211,7 @@ let
       ./programs/nnn.nix
       ./programs/noti.nix
       ./programs/notmuch.nix
+      ./programs/ntfy-sh.nix
       ./programs/numbat.nix
       ./programs/nushell.nix
       ./programs/nvchecker.nix
