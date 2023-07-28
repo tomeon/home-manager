@@ -183,6 +183,7 @@ let
     ./programs/nnn.nix
     ./programs/noti.nix
     ./programs/notmuch.nix
+    ./programs/ntfy-sh.nix
     ./programs/nushell.nix
     ./programs/obs-studio.nix
     ./programs/octant.nix
