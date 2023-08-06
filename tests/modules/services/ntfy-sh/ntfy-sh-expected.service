@@ -1,0 +1,11 @@
+[Install]
+WantedBy=default.target
+
+[Service]
+ExecStart=@IGNORED-BY-TEST@
+Restart=always
+RuntimeDirectory=ntfy-sh
+
+[Unit]
+Description=ntfy.sh notification client service
+X-Restart-Triggers=@IGNORED-BY-TEST@
