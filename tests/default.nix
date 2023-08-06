@@ -115,6 +115,7 @@ in import nmtSrc {
     ./modules/programs/nheko
     ./modules/programs/nix-index
     ./modules/programs/nnn
+    ./modules/programs/ntfy-sh
     ./modules/programs/nushell
     ./modules/programs/oh-my-posh
     ./modules/programs/openstackclient
