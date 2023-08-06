@@ -463,6 +463,7 @@ import nmtSrc {
       ./modules/services/mpdris2
       ./modules/services/mpdscribble
       ./modules/services/nix-gc
+      ./modules/services/ntfy-sh
       ./modules/services/ollama/linux
       ./modules/services/osmscout-server
       ./modules/services/pantalaimon
