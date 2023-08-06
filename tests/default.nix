@@ -260,6 +260,7 @@ import nmtSrc {
       ./modules/programs/nix-init
       ./modules/programs/nix-your-shell
       ./modules/programs/nnn
+      ./modules/programs/ntfy-sh
       ./modules/programs/numbat
       ./modules/programs/nushell
       ./modules/programs/oh-my-posh
