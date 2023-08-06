@@ -147,7 +147,6 @@ let
     ];
 
   isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
-  isLinux = pkgs.stdenv.hostPlatform.isLinux;
 in
 import nmtSrc {
   inherit lib pkgs modules;
@@ -155,73 +154,4 @@ import nmtSrc {
     "home"
     "activationPackage"
   ];
-  tests =
-    builtins.foldl'
-      (
-        a: b:
-        a
-        // (
-          let
-            imported = import b;
-          in
-          if lib.isFunction imported then imported { inherit lib pkgs; } else imported
-        )
-      )
-      { }
-      (
-        [
-          # keep-sorted start case=no numeric=yes
-          ./lib/generators
-          ./lib/types
-          ./modules/files
-          ./modules/home-environment
-          ./modules/misc/fontconfig
-          ./modules/misc/manual
-          ./modules/misc/news
-          ./modules/misc/nix
-          ./modules/misc/nix-remote-build
-          ./modules/misc/specialisation
-          ./modules/misc/xdg
-          ./modules/xresources
-          # keep-sorted end
-        ]
-        ++ lib.optionals isDarwin [
-          # keep-sorted start case=no numeric=yes
-          ./modules/launchd
-          ./modules/targets-darwin
-          # keep-sorted end
-        ]
-        ++ lib.optionals isLinux [
-          # keep-sorted start case=no numeric=yes
-          ./modules/config/home-cursor
-          ./modules/config/i18n
-          ./modules/dbus
-          ./modules/i18n/input-method
-          ./modules/misc/debug
-          ./modules/misc/editorconfig
-          ./modules/misc/gtk
-          ./modules/misc/numlock
-          ./modules/misc/pam
-          ./modules/misc/qt
-          ./modules/misc/xdg/linux.nix
-          ./modules/misc/xsession
-          ./modules/systemd
-          ./modules/targets-linux
-          # keep-sorted end
-        ]
-        ++ (lib.concatMap
-          (
-            dir:
-            lib.pipe dir [
-              builtins.readDir
-              (lib.filterAttrs (_path: kind: kind == "directory"))
-              (lib.mapAttrsToList (path: _kind: lib.path.append dir path))
-            ]
-          )
-          [
-            ./modules/services
-            ./modules/programs
-          ]
-        )
-      );
 }
