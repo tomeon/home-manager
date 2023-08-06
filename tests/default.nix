@@ -123,6 +123,7 @@ in import nmtSrc {
     ./modules/programs/nix-index
     ./modules/programs/nix-your-shell
     ./modules/programs/nnn
+    ./modules/programs/ntfy-sh
     ./modules/programs/nushell
     ./modules/programs/oh-my-posh
     ./modules/programs/openstackclient
