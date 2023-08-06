@@ -198,16 +198,15 @@ let
       example = {
         _secret = "/store/tokens/somewhere/safe";
       };
-      description =
-        ''
-          Access token for authenticating with the `ntfy` server when running
-          {command}`ntfy publish` and {command}`ntfy subscribe`.
+      description = ''
+        Access token for authenticating with the `ntfy` server when running
+        {command}`ntfy publish` and {command}`ntfy subscribe`.
 
-          See <https://docs.ntfy.sh/config/#access-tokens> for information on
-          creating tokens and <https://docs.ntfy.sh/publish/#access-tokens> for
-          information on using them.
-        ''
-        + description;
+        See <https://docs.ntfy.sh/config/#access-tokens> for information on
+        creating tokens and <https://docs.ntfy.sh/publish/#access-tokens> for
+        information on using them.
+      ''
+      + description;
     };
 
   userOption =
@@ -216,12 +215,11 @@ let
     }:
     mkOmittableOption {
       type = types.nullOr (lib.hm.types.secretOr types.str);
-      description =
-        ''
-          Authentication username to use with {command}`ntfy publish` and
-          {command}`ntfy subscribe`.
-        ''
-        + description;
+      description = ''
+        Authentication username to use with {command}`ntfy publish` and
+        {command}`ntfy subscribe`.
+      ''
+      + description;
       example = "my-user";
     };
 
@@ -231,13 +229,12 @@ let
     }:
     mkOmittableOption {
       type = types.nullOr (lib.hm.types.secretOr types.str);
-      description =
-        ''
-          Authentication password to use with {command}`ntfy publish` and
-          {command}`ntfy subscribe`.  For an empty password, use empty
-          double-quotes (`""`).
-        ''
-        + description;
+      description = ''
+        Authentication password to use with {command}`ntfy publish` and
+        {command}`ntfy subscribe`.  For an empty password, use empty
+        double-quotes (`""`).
+      ''
+      + description;
       example = {
         _secret = "/file/containing/the/password";
       };
@@ -249,19 +246,18 @@ let
     }:
     mkOmittableOption {
       type = commandType;
-      description =
-        ''
-          Command to run in response to incoming messages.  See
-          <https://docs.ntfy.sh/subscribe/cli/#run-command-for-every-message>,
-          which includes a specification of the message fields passed to the
-          command as environment variables.
+      description = ''
+        Command to run in response to incoming messages.  See
+        <https://docs.ntfy.sh/subscribe/cli/#run-command-for-every-message>,
+        which includes a specification of the message fields passed to the
+        command as environment variables.
 
-          Note that commands are interpreted by a shell.
+        Note that commands are interpreted by a shell.
 
-          Leaving this option undefined will cause {command}`ntfy subscribe` to
-          print incoming messages as JSON objects.
-        ''
-        + description;
+        Leaving this option undefined will cause {command}`ntfy subscribe` to
+        print incoming messages as JSON objects.
+      ''
+      + description;
       example = ''
         notify-send "Received message: $m"
       '';
