@@ -231,6 +231,7 @@ in import nmtSrc {
     ./modules/services/mpd
     ./modules/services/mpd-mpris
     ./modules/services/mpdris2
+    ./modules/services/ntfy-sh
     ./modules/services/pantalaimon
     ./modules/services/parcellite
     ./modules/services/pass-secret-service
