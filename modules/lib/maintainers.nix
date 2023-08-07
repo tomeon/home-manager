@@ -505,6 +505,15 @@
     keys =
       [{ fingerprint = "7944 74B7 D236 DAB9 C9EF  E7F9 5CCE 6F14 66D4 7C9E"; }];
   };
+  tomeon = {
+    email = "tomeon@dogea.red";
+    github = "tomeon";
+    githubId = 1287639;
+    keys = [{
+      longkeyid = "ecdsa-sha2-nistp256/0xDBFCDAE019DA7DC1";
+      fingerprint = "B7A2 196C 4EB2 7F80 DBFC DAE0 19DA 7DC1";
+    }];
+  };
   tomodachi94 = {
     email = "tomodachi94+nixpkgs@protonmail.com";
     matrix = "@tomodachi94:matrix.org";
