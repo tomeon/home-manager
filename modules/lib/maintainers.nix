@@ -540,6 +540,17 @@
     github = "SunOfLife1";
     githubId = 30405063;
   };
+  tomeon = {
+    email = "tomeon@dogea.red";
+    github = "tomeon";
+    githubId = 1287639;
+    keys = [
+      {
+        longkeyid = "ecdsa-sha2-nistp256/0xDBFCDAE019DA7DC1";
+        fingerprint = "B7A2 196C 4EB2 7F80 DBFC DAE0 19DA 7DC1";
+      }
+    ];
+  };
   yarn = {
     name = "yarncat";
     email = "30006414+yaaaarn@users.noreply.github.com";
