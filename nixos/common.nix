@@ -22,6 +22,22 @@ let
 
   extendedLib = import ../modules/lib/stdlib-extended.nix lib;
 
+  # `defaultOverridePriority` (and its legacy counterpart `defaultPriority`)
+  # represents the priority of option definitions that do not explicity specify
+  # a priority; that is, definitions of the form `{ foo = "bar"; }`.
+  #
+  # Setting an option with `mkUserDefault` permits the module system to resolve
+  # the so-defined option's priority without evaluating its value.  We use this
+  # to define `home.username` and `home.homeDirectory` at the default priority,
+  # while also allowing consumers to override these values with `mkForce`, and,
+  # crucially, allowing consumers to define `home-manager.users` entries
+  # **without those users needing to have corresponding entries in
+  # `config.users.users`**.
+  #
+  # In other respects, `{ foo = mkUserDefault "bar"; }` quacks like
+  # `{ foo = "bar"; }`.
+  mkUserDefault = lib.mkOverride (lib.modules.defaultOverridePriority or lib.modules.defaultPriority);
+
   hmModule = types.submoduleWith {
     description = "Home Manager module";
     class = "homeManager";
@@ -60,9 +76,9 @@ let
                   # no-value-defined error during module evaluation.
                   userUid = builtins.tryEval config.users.users.${name}.uid;
                 in
-                mkIf (userUid.success && userUid.value != null) userUid.value;
-              username = config.users.users.${name}.name;
-              homeDirectory = config.users.users.${name}.home;
+                mkIf (userUid.success && userUid.value != null) (mkUserDefault userUid.value);
+              username = mkUserDefault config.users.users.${name}.name;
+              homeDirectory = mkUserDefault config.users.users.${name}.home;
             };
 
             nix = {
