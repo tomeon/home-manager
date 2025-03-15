@@ -1,10 +1,10 @@
 {
   config,
+  lib,
   osConfig,
   pkgs,
-  lib,
   ...
-}:
+}@args:
 
 let
 
@@ -33,7 +33,7 @@ in
         Whether to enable [XDG desktop integration](https://github.com/flatpak/xdg-desktop-portal).
 
         Note, if you installed Home Manager via its NixOS module and
-        'home-manager.useUserPackages' is enabled, make sure to add
+        'home-manager.users.${args.name or "<name>"}.useUserPackages' is enabled, make sure to add
 
         ``` nix
         environment.pathsToLink = [ "/share/xdg-desktop-portal" "/share/applications" ];
@@ -141,11 +141,12 @@ in
               onNixos = pkgs.stdenv.hostPlatform.isLinux && config.submoduleSupport.enable;
               isLinked = path: lib.elem path osConfig.environment.pathsToLink;
             in
-            onNixos && osConfig.home-manager.useUserPackages
+            onNixos && config.home.useUserPackages
             -> isLinked "/share/applications" && isLinked "/share/xdg-desktop-portal";
           message = ''
             xdg.portal: since you installed Home Manager via its NixOS module and
-            'home-manager.useUserPackages' is enabled, you need to add
+            'home-manager.users.${args.name or "<name>"}.useUserPackages' is enabled,
+            you need to add
 
             environment.pathsToLink = [ `/share/applications` `/share/xdg-desktop-portal` ];
 

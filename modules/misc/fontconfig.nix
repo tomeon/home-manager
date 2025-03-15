@@ -8,7 +8,7 @@
   nixosConfig,
   pkgs,
   ...
-}:
+}@args:
 
 let
 
@@ -77,18 +77,18 @@ in
           {var}`home.packages` and {command}`nix-env`.
 
           If Home Manager is installed as a NixOS submodule and
-          {var}`home-manager.useUserPackages` is enabled, this option defaults to the
-          value of NixOS' {var}`fonts.fontconfig.enable`.
+          {var}`home-manager.users.${args.name or "<name>"}.useUserPackages` is enabled,
+          this option defaults to the value of NixOS' {var}`fonts.fontconfig.enable`.
         '';
         # On NixOS, the per-user directory inside /etc/profiles is not known by
         # fontconfig by default.
         default =
           nixosConfig != null
-          && nixosConfig.home-manager.useUserPackages
+          && config.home.useUserPackages
           && nixosConfig.fonts.fontconfig.enable;
         defaultText = lib.literalExpression ''
           nixosConfig != null
-          && nixosConfig.home-manager.useUserPackages
+          && config.home.useUserPackages
           && nixosConfig.fonts.fontconfig.enable;
         '';
       };
