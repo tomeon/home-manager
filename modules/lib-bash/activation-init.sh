@@ -123,6 +123,56 @@ function checkPathEq() {
     fi
 }
 
+function resolveUsername() {
+    local user="$1"
+    id -un "$user" 2>/dev/null && return
+    local name
+    read -r name _ < <(getent passwd "$user" 2>/dev/null)
+    echo "${name:-"$user"}"
+}
+
+function resolveUid() {
+    local user="$1"
+    id -u "$user" 2>/dev/null && return
+    local uid
+    read -r uid _ < <(getent passwd "$user" 2>/dev/null)
+    echo "${uid:-}"
+}
+
+function checkUsername() {
+    local expectedUser="$1"
+
+    if [[ -n "${USER:-}" ]]; then
+        if resolvedExpectedUser="$(resolveUsername "$expectedUser")" && [[ "$USER" = "$resolvedExpectedUser" ]]; then
+            return
+        elif {
+               resolvedActualUid="$(resolveUid "$USER")" \
+            && resolvedExpectedUid="$(resolveUid "$expectedUser")" \
+            && [[ "$resolvedActualUid" = "$resolvedExpectedUid" ]]
+        }; then
+            return
+        fi
+    fi
+
+    checkStringEq USER "${USER:-}" "$expectedUser"
+}
+
+function checkHomeDirectory() {
+    local expectedHome="$1"
+
+    local checkFn=checkStringEq
+    if [[ -n "${HOME:-}" ]] && [[ -d "$HOME" ]] && [[ -d "$expectedHome" ]]; then
+        checkFn=checkPathEq
+    fi
+
+    "$checkFn" HOME "${HOME:-}" "$expectedHome"
+}
+
+function checkUID() {
+  local expectedUID="$1"
+  checkStringEq UID "${UID:-}" "$expectedUID"
+}
+
 # Note, the VERBOSE_ECHO variable is deprecated and should not be used inside
 # the Home Manager project. It is provided here for backwards compatibility.
 if [[ -v VERBOSE ]]; then
