@@ -846,8 +846,8 @@ in
           ${builtins.readFile ./lib-bash/activation-init.sh}
 
           if [[ ! -v SKIP_SANITY_CHECKS ]]; then
-            checkUsername ${lib.escapeShellArg config.home.username}
-            checkHomeDirectory ${lib.escapeShellArg config.home.homeDirectory}
+            checkUsername ${lib.escapeShellArg config.home.username} || exit
+            checkHomeDirectory ${lib.escapeShellArg config.home.homeDirectory} || exit
           fi
 
           ${lib.optionalString config.home.activationGenerateGcRoot ''

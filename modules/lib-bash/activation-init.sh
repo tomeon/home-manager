@@ -99,22 +99,52 @@ function nixProfileRemove() {
     fi
 }
 
+function resolveUsername() {
+  local user="$1"
+  id -un "$user" 2>/dev/null && return
+  local name
+  read -r name _ < <(getent passwd "$user" 2>/dev/null)
+  echo "${name:-"$user"}"
+}
+
+function resolveUid() {
+  local user="$1"
+  id -u "$user" 2>/dev/null && return
+  local uid
+  read -r uid _ < <(getent passwd "$user" 2>/dev/null)
+  echo "${uid:-}"
+}
+
 function checkUsername() {
   local expectedUser="$1"
 
-  if [[ "$USER" != "$expectedUser" ]]; then
-    _iError 'Error: USER is set to "%s" but we expect "%s"' "$USER" "$expectedUser"
-    exit 1
+  if [[ -n "${USER:-}" ]]; then
+    if [[ "$USER" = "$(resolveUsername "$expectedUser")" ]]; then
+      return
+    elif [[ "$(resolveUid "$USER")" = "$(resolveUid "$expectedUser")" ]]; then
+      return
+    fi
   fi
+
+  _iError 'Error: USER is set to "%s" but we expect "%s"' "${USER:-}" "$expectedUser"
+  return 1
 }
 
 function checkHomeDirectory() {
   local expectedHome="$1"
 
-  if ! [[ $HOME -ef $expectedHome ]]; then
-    _iError 'Error: HOME is set to "%s" but we expect "%s"' "$HOME" "$expectedHome"
-    exit 1
+  if [[ -n "${HOME:-}" ]]; then
+    if [[ -d "$HOME" ]] && [[ -d "$expectedHome" ]]; then
+      if [[ "$HOME" -ef "$expectedHome" ]]; then
+        return
+      fi
+    elif [[ "$HOME" = "$expectedHome" ]]; then
+      return
+    fi
   fi
+
+  _iError 'Error: HOME is set to "%s" but we expect "%s"' "${HOME:-}" "$expectedHome"
+  return 1
 }
 
 # Note, the VERBOSE_ECHO variable is deprecated and should not be used inside
